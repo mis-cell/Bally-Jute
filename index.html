@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bally Internal Portal</title>
+
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. React Dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 3. Prop-Types -->
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+
+    <!-- 4. Recharts -->
+    <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
+
+    <!-- 5. Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: #f8fafc; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { 
+            AreaChart, Area, BarChart, Bar, CartesianGrid, Tooltip, ResponsiveContainer, XAxis, YAxis, Legend 
+        } = Recharts;
+
+        // --- Icons Component ---
+        const Icon = ({ name, className }) => {
+            const icons = {
+                user: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>,
+                lock: <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>,
+                factory: <path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>,
+                leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.5 1.4 10.2A7 7 0 0 1 11 20c-5 0-8.5-9.1-8.5-15 0 0-2.4 2-2.4 4h0"></path>,
+                activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>,
+                box: <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>,
+                settings: <circle cx="12" cy="12" r="3"></circle>,
+                logOut: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>,
+                shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>,
+                layers: <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>,
+                external: <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            };
+
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name] || icons.activity}
+                    {name === 'user' && <circle cx="12" cy="7" r="4"></circle>}
+                    {name === 'lock' && <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>}
+                    {name === 'layers' && <polyline points="2 17 12 22 22 17"></polyline>}
+                    {name === 'layers' && <polyline points="2 12 12 17 22 12"></polyline>}
+                    {name === 'logOut' && <polyline points="16 17 21 12 16 7"></polyline>}
+                    {name === 'logOut' && <line x1="21" y1="12" x2="9" y2="12"></line>}
+                    {name === 'external' && <polyline points="15 3 21 3 21 9"></polyline>}
+                    {name === 'external' && <line x1="10" y1="14" x2="21" y2="3"></line>}
+                </svg>
+            );
+        };
+
+        // --- Login Component ---
+        const LoginScreen = ({ onLogin }) => {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                setError('');
+                if (username === 'Admin' && password === '12345') {
+                    onLogin('Admin');
+                } else if (username === 'User' && password === '1234') {
+                    onLogin('User');
+                } else {
+                    setError('Invalid Credentials. Please try again.');
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-800 to-slate-900">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
+                        <div className="flex justify-center mb-6">
+                            <div className="bg-green-100 p-4 rounded-full">
+                                <Icon name="factory" className="w-10 h-10 text-green-700" />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-bold text-center text-gray-800 mb-1">Bally OPS Portal</h2>
+                        <p className="text-center text-gray-500 mb-8 text-sm">Internal Process Control System</p>
+
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Icon name="user" className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                        placeholder="Enter username"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Icon name="lock" className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <input 
+                                        type="password" 
+                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                        placeholder="Enter password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            
+                            {error && <p className="text-red-500 text-sm text-center bg-red-50 py-2 rounded">{error}</p>}
+                            
+                            <button type="submit" className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg">
+                                Login to System
+                            </button>
+                        </form>
+                        <div className="mt-6 text-center text-xs text-gray-400">
+                            <p>Bally Jute • Internal Use Only</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Dashboard Component ---
+        const Dashboard = ({ userRole, onLogout }) => {
+            const [activeTab, setActiveTab] = useState('overview');
+            const [time, setTime] = useState(new Date().toLocaleTimeString());
+            
+            // State for API Data
+            const [juteStatsData, setJuteStatsData] = useState(null); // For Cards
+            const [juteGraphData, setJuteGraphData] = useState(null); // For Graph
+            const [juteReceivedData, setJuteReceivedData] = useState(null); // For Right Panel List
+
+            // Clock
+            useEffect(() => {
+                const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
+                return () => clearInterval(t);
+            }, []);
+
+            // --- GOOGLE SHEETS API FETCH ---
+            useEffect(() => {
+                const fetchSheetData = async () => {
+                    const apiKey = "AIzaSyAriKmI0OQAzmO3uH3EAK7598TkQBYT52I";
+                    const sheetId = "1V2eNNzVvfSSCvkAp4PBif1Bpbf8ap_wa78m_eIlwn0U";
+                    const sheetName = "dashboard";
+                    
+                    // 1. Stats Range (A2:F2)
+                    const urlStats = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!A2:F2?key=${apiKey}`;
+                    // 2. Graph Range (G2:H9)
+                    const urlGraph = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!G2:H9?key=${apiKey}`;
+                    // 3. Received List Range (I2:J9)
+                    const urlRec = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!I2:J9?key=${apiKey}`;
+
+                    try {
+                        // Fetch Stats
+                        const resStats = await fetch(urlStats);
+                        const jsonStats = await resStats.json();
+                        if (jsonStats.values && jsonStats.values.length > 0) {
+                            const row = jsonStats.values[0];
+                            setJuteStatsData({
+                                startDate: row[0] || "N/A",
+                                endDate: row[1] || "N/A",
+                                grade: row[2] || "0",
+                                moisture: row[3] || "0",
+                                dust: row[4] || "0",
+                                weight: row[5] || "0"
+                            });
+                        }
+
+                        // Fetch Graph
+                        const resGraph = await fetch(urlGraph);
+                        const jsonGraph = await resGraph.json();
+                        if (jsonGraph.values && jsonGraph.values.length > 0) {
+                            const formattedGraphData = jsonGraph.values.map(row => ({
+                                time: row[0],         
+                                actual: parseFloat(row[1]) || 0, 
+                                target: 0 
+                            }));
+                            setJuteGraphData(formattedGraphData);
+                        }
+
+                        // Fetch Received List
+                        const resRec = await fetch(urlRec);
+                        const jsonRec = await resRec.json();
+                        if (jsonRec.values && jsonRec.values.length > 0) {
+                            setJuteReceivedData(jsonRec.values);
+                        }
+
+                    } catch (error) {
+                        console.error("Error fetching Google Sheet data:", error);
+                    }
+                };
+
+                fetchSheetData();
+            }, []);
+
+            const themeColor = 'green';
+
+            // --- Dynamic Data Generator ---
+            const getDataForTab = (tab) => {
+                let data = {
+                    title: "Global Plant Overview",
+                    graphTitle: "Performance Trend",
+                    rightPanelTitle: "Key Machine Status",
+                    stats: [
+                        { label: "Total Efficiency", val: "88.4%", color: "text-green-600" },
+                        { label: "Total Production", val: "142 MT", color: "text-slate-800" },
+                        { label: "Active Machines", val: "412", color: "text-slate-800" },
+                        { label: "Maintenance Issues", val: "3", color: "text-red-600" }
+                    ],
+                    chartData: [
+                        { time: '08:00', target: 400, actual: 380 },
+                        { time: '10:00', target: 400, actual: 410 },
+                        { time: '12:00', target: 400, actual: 390 },
+                        { time: '14:00', target: 400, actual: 405 },
+                    ],
+                    machines: [
+                        { id: "LM-01", type: "Hessian Loom", status: "Running", eff: 92 },
+                        { id: "SP-12", type: "Slip Draft", status: "Running", eff: 95 },
+                        { id: "BT-04", type: "Softener", status: "Stopped", eff: 0 },
+                    ]
+                };
+
+                if (tab === 'jute') {
+                    const safeStats = juteStatsData || { 
+                        startDate: "Loading...", endDate: "...", grade: "-", moisture: "-", dust: "-", weight: "-" 
+                    };
+                    const safeGraph = juteGraphData || [{ time: 'Loading', actual: 0 }];
+                    
+                    const safeReceivedList = juteReceivedData 
+                        ? juteReceivedData.map(row => ({
+                            id: row[0], 
+                            type: "Raw Jute", 
+                            displayValue: row[1], 
+                            isReceived: true 
+                        }))
+                        : [];
+
+                    data = {
+                        title: "Jute Department Overview",
+                        graphTitle: "Last 7 Days Grade Down",
+                        rightPanelTitle: "Last 7 Days Received",
+                        stats: [
+                            { label: "Start Date", val: safeStats.startDate, color: "text-blue-600" },
+                            { label: "End Date", val: safeStats.endDate, color: "text-slate-800" },
+                            { label: "Avg Grade Down %", val: safeStats.grade + "%", color: "text-slate-800" },
+                            { label: "Moisture %", val: safeStats.moisture + "%", color: "text-yellow-600" },
+                            { label: "Dust %", val: safeStats.dust + "%", color: "text-yellow-600" },
+                            { label: "Weight %", val: safeStats.weight + "%", color: "text-yellow-600" }
+                        ],
+                        chartData: safeGraph,
+                        machines: safeReceivedList
+                    };
+                } else if (tab === 'batching') {
+                    data = {
+                        title: "Batching Section Status",
+                        graphTitle: "Production Output",
+                        rightPanelTitle: "Key Machine Status",
+                        stats: [
+                            { label: "Spreader Eff", val: "94.0%", color: "text-green-600" },
+                            { label: "Emulsion Used", val: "2.4 KL", color: "text-slate-800" },
+                            { label: "Cuttings/Hr", val: "1200 Kg", color: "text-slate-800" },
+                            { label: "Moisture Var", val: "+1.2%", color: "text-red-500" }
+                        ],
+                        chartData: [
+                            { time: 'Shift A', target: 5000, actual: 4800 },
+                            { time: 'Shift B', target: 5000, actual: 5100 },
+                            { time: 'Shift C', target: 5000, actual: 4950 },
+                        ],
+                        machines: [
+                            { id: "SF-01", type: "Softener", status: "Running", eff: 96 },
+                            { id: "SF-02", type: "Softener", status: "Maint", eff: 0 },
+                            { id: "BR-01", type: "Breaker Card", status: "Running", eff: 92 },
+                        ]
+                    };
+                } else if (tab === 'spinning') {
+                    data = {
+                        title: "Spinning Frame Metrics",
+                        graphTitle: "Efficiency Trend",
+                        rightPanelTitle: "Key Machine Status",
+                        stats: [
+                            { label: "Frame Eff", val: "86.5%", color: "text-yellow-600" },
+                            { label: "Yarn Output", val: "45 MT", color: "text-slate-800" },
+                            { label: "Spindles Run", val: "1200", color: "text-slate-800" },
+                            { label: "Breakage/Hr", val: "14", color: "text-red-600" }
+                        ],
+                        chartData: [
+                            { time: '08:00', target: 100, actual: 90 },
+                            { time: '10:00', target: 100, actual: 95 },
+                            { time: '12:00', target: 100, actual: 88 },
+                        ],
+                        machines: [
+                            { id: "FR-10", type: "SD Frame", status: "Running", eff: 88 },
+                            { id: "FR-11", type: "SD Frame", status: "Running", eff: 85 },
+                            { id: "FR-12", type: "Apron Draft", status: "Running", eff: 91 },
+                        ]
+                    };
+                } else if (tab === 'weaving') {
+                    data = {
+                        title: "Weaving (Looms) Production",
+                        graphTitle: "Cloth Output",
+                        rightPanelTitle: "Key Machine Status",
+                        stats: [
+                            { label: "Loom Eff", val: "92.1%", color: "text-green-600" },
+                            { label: "Cloth Meters", val: "12,500", color: "text-slate-800" },
+                            { label: "Running Looms", val: "84", color: "text-slate-800" },
+                            { label: "Beam Changes", val: "5", color: "text-blue-600" }
+                        ],
+                        chartData: [
+                            { time: 'Mon', target: 12000, actual: 11500 },
+                            { time: 'Tue', target: 12000, actual: 12100 },
+                            { time: 'Wed', target: 12000, actual: 11800 },
+                        ],
+                        machines: [
+                            { id: "LM-55", type: "Hessian", status: "Running", eff: 94 },
+                            { id: "LM-56", type: "Sacking", status: "Running", eff: 91 },
+                            { id: "LM-57", type: "Hessian", status: "Stopped", eff: 0 },
+                        ]
+                    };
+                }
+
+                return data;
+            };
+
+            const currentData = getDataForTab(activeTab);
+
+            return (
+                <div className="flex h-screen bg-slate-100 overflow-hidden animate-fade-in">
+                    {/* Sidebar */}
+                    <div className={`w-64 bg-slate-900 text-white flex flex-col transition-all duration-300`}>
+                        <div className={`p-6 border-b border-slate-800`}>
+                            <h2 className={`text-xl font-bold text-${themeColor}-400 tracking-wider uppercase`}>Bally OPS</h2>
+                            <p className="text-xs text-slate-400 mt-1">Internal Control</p>
+                        </div>
+                        
+                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                            <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm ${activeTab === 'overview' ? `bg-${themeColor}-700 text-white` : 'text-slate-400 hover:bg-slate-800'}`}>
+                                <Icon name="activity" className="w-4 h-4" /> Overview
+                            </button>
+                            
+                            <div className="text-xs font-semibold text-slate-500 mt-6 mb-2 px-3 uppercase">
+                                Departments
+                            </div>
+
+                            {/* JUTE OPTION */}
+                            <button onClick={() => setActiveTab('jute')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm ${activeTab === 'jute' ? `bg-${themeColor}-700 text-white` : 'text-slate-400 hover:bg-slate-800'}`}>
+                                <Icon name="layers" className="w-4 h-4" /> Jute Dept. Overview
+                            </button>
+
+                            {/* Sub-Sections */}
+                            <div className="pl-4 mt-2 space-y-1 border-l border-slate-700 ml-3">
+                                {['batching', 'spinning', 'weaving', 'finishing'].map(sec => (
+                                    <button key={sec} onClick={() => setActiveTab(sec)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${activeTab === sec ? `bg-${themeColor}-700/50 text-white` : 'text-slate-400 hover:bg-slate-800'}`}>
+                                        <span className="capitalize">{sec}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="text-xs font-semibold text-slate-500 mt-6 mb-2 px-3 uppercase">Control</div>
+                            <button onClick={() => setActiveTab('quality')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm ${activeTab === 'quality' ? `bg-${themeColor}-700 text-white` : 'text-slate-400 hover:bg-slate-800'}`}>
+                                <Icon name="leaf" className="w-4 h-4" /> Quality Lab
+                            </button>
+
+                            {userRole === 'Admin' && (
+                                <div className="mt-6 p-3 bg-slate-800 rounded-lg border border-red-900/30">
+                                    <div className="flex items-center gap-2 text-red-400 text-xs font-bold mb-2">
+                                        <Icon name="shield" className="w-3 h-3" /> ADMIN CONTROLS
+                                    </div>
+                                    <button className="w-full text-left text-xs text-slate-300 hover:text-white py-1">Adjust Targets</button>
+                                </div>
+                            )}
+                        </nav>
+
+                        <div className="p-4 border-t border-slate-800">
+                            <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-xs text-slate-400 hover:text-red-400 transition-colors">
+                                <Icon name="logOut" className="w-3 h-3" /> Log Out
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="flex-1 flex flex-col">
+                        {/* Header */}
+                        <header className="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-6 shadow-sm z-10">
+                            <h1 className="text-xl font-bold text-slate-800 capitalize">{currentData.title}</h1>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right hidden md:block">
+                                    <p className="text-xs font-bold text-slate-700">{userRole === 'Admin' ? 'Administrator' : 'Shift User'}</p>
+                                    <p className="text-xs text-slate-500">{time}</p>
+                                </div>
+                                <div className={`w-10 h-10 rounded-full bg-${themeColor}-100 flex items-center justify-center text-${themeColor}-700 font-bold`}>
+                                    {userRole[0]}
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* Body - Dynamic Dashboard for ALL tabs */}
+                        <div className="flex-1 overflow-auto p-6">
+                            <div className="space-y-6">
+                                {/* Stats Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                    {currentData.stats.map((stat, idx) => (
+                                        <div key={idx} className={`bg-white p-4 rounded-xl shadow-sm border border-slate-200 animate-fade-in ${activeTab !== 'jute' && idx > 3 ? 'hidden md:block' : ''}`} style={{animationDelay: `${idx * 50}ms`}}>
+                                            <p className="text-xs text-slate-500 uppercase">{stat.label}</p>
+                                            <p className={`text-lg font-bold ${stat.color}`}>{stat.val}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Chart & Machines */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="font-bold text-slate-700">{currentData.graphTitle}</h3>
+                                            {activeTab !== 'jute' && (
+                                                <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500">Last 4 Intervals</span>
+                                            )}
+                                        </div>
+                                        <div className="h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={currentData.chartData}>
+                                                    <defs>
+                                                        <linearGradient id="colorProd" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8}/>
+                                                            <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                                    <XAxis dataKey="time" />
+                                                    <YAxis />
+                                                    <Tooltip />
+                                                    <Area type="monotone" dataKey="actual" stroke="#16a34a" fill="url(#colorProd)" name={activeTab === 'jute' ? "Grade Down %" : "Actual Output"} />
+                                                    {activeTab !== 'jute' && <Area type="monotone" dataKey="target" stroke="#94a3b8" fill="none" strokeDasharray="5 5" name="Target" />}
+                                                    <Legend />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+
+                                        {/* --- NEW "CARD" / LINK BELOW GRAPH --- */}
+                                        <div className="mt-6 pt-4 border-t border-slate-100">
+                                            <a 
+                                                href="https://script.google.com/a/macros/yajurfibres.com/s/AKfycbzBVCAE4bkNt0HB2UzCbvE23clIc69iWy39l8wP_4YQXAXbai9upavKJJWkww9s82pU/exec"
+                                                target="_blank"
+                                                className="group flex items-center justify-between w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 p-4 rounded-lg transition-all cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="bg-blue-200 p-2 rounded-full text-blue-700">
+                                                        <Icon name="external" className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-blue-800 group-hover:text-blue-900">Log in to App for Full View</h4>
+                                                        <p className="text-xs text-blue-600">Click here to access detailed reports</p>
+                                                    </div>
+                                                </div>
+                                                <Icon name="activity" className="w-4 h-4 text-blue-400 group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </a>
+                                        </div>
+                                        {/* --- END NEW CARD --- */}
+
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                        <h3 className="font-bold text-slate-700 mb-4">{currentData.rightPanelTitle}</h3>
+                                        
+                                        <div className="space-y-3">
+                                            {currentData.machines.map((m, i) => (
+                                                <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100 text-sm">
+                                                    <div>
+                                                        <p className="font-bold text-slate-700">{m.id}</p>
+                                                        <p className="text-xs text-slate-500">{m.type}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        {!m.isReceived && (
+                                                            <span className={`inline-block w-2 h-2 rounded-full mr-2 ${m.status === 'Running' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                                                        )}
+                                                        <span className="font-medium">
+                                                            {m.isReceived ? m.displayValue : `${m.eff}% Eff`}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {currentData.machines.length === 0 && (
+                                                <p className="text-sm text-slate-400 text-center py-4">No specific data available.</p>
+                                            )}
+                                        </div>
+                                        <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+                                            <button className="text-xs text-green-600 font-semibold hover:underline">
+                                                {activeTab === 'jute' ? 'View Full History' : `View All ${activeTab} Machines`} &rarr;
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [view, setView] = useState('login');
+            const [userRole, setUserRole] = useState(null);
+
+            const handleLogin = (role) => {
+                setUserRole(role);
+                setView('dashboard');
+            };
+
+            const handleLogout = () => {
+                setUserRole(null);
+                setView('login');
+            };
+
+            return (
+                <>
+                    {view === 'login' && <LoginScreen onLogin={handleLogin} />}
+                    {view === 'dashboard' && <Dashboard userRole={userRole} onLogout={handleLogout} />}
+                </>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
