@@ -5,15 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bally Internal Portal</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts must be a <link>, NOT @import inside <style> (causes Babel module error) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- If any library fails to download, show exactly which one instead of spinning forever -->
+    <script>
+        function scriptFailed(name) {
+            var root = document.getElementById('root');
+            if (root) {
+                root.innerHTML =
+                    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;padding:24px">' +
+                    '<div style="max-width:520px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;color:#991b1b">' +
+                    '<b>Could not load: ' + name + '</b><br><br>' +
+                    'This library is blocked or unreachable on your current network. The portal cannot start without it. ' +
+                    'Try a different network, or host the libraries locally in your repo.' +
+                    '</div></div>';
+            }
+        }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com" onerror="console.warn('Tailwind CDN blocked — page will load but look unstyled.')"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js" onerror="scriptFailed('React')"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js" onerror="scriptFailed('ReactDOM')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js" onerror="scriptFailed('PropTypes')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.10.3/umd/Recharts.js" onerror="scriptFailed('Recharts')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js" onerror="scriptFailed('Babel')"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700&display=swap');
+        /* No @import here — fonts loaded via <link> above */
         body { font-family: 'Sora', system-ui, sans-serif; background-color: #f0f4f8; }
         .animate-fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -37,7 +58,32 @@
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#475569">
+            <div style="text-align:center">
+                <div style="width:38px;height:38px;border:4px solid #cbd5e1;border-top-color:#16a34a;border-radius:50%;margin:0 auto 14px;animation:spin 0.8s linear infinite"></div>
+                Loading portal…
+            </div>
+        </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+    <!-- Shows any error on screen instead of a silent blank page -->
+    <script>
+        window.addEventListener('error', function (e) {
+            var root = document.getElementById('root');
+            if (root) {
+                root.innerHTML =
+                    '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;padding:24px">' +
+                    '<div style="max-width:520px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;color:#991b1b">' +
+                    '<b>Something failed to load.</b><br><br>' +
+                    'If you are viewing this inside a sandboxed preview, external scripts (React / Tailwind / Recharts from the CDN) may be blocked. ' +
+                    'This works correctly when hosted on GitHub Pages or opened directly in a browser.<br><br>' +
+                    '<code style="font-size:12px;word-break:break-all">' + (e.message || e.type) + '</code>' +
+                    '</div></div>';
+            }
+        });
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -219,7 +265,6 @@
                             : []
                     };
                 }
-                // Default overview
                 return {
                     title: "Global Plant Overview",
                     graphTitle: "Performance Trend",
@@ -256,21 +301,17 @@
                         </div>
 
                         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                            {/* Overview */}
                             <button onClick={() => setActiveTab('overview')} className={`nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${activeTab === 'overview' ? 'bg-green-700 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                                 <Icon name="activity" className="w-4 h-4" /> Overview
                             </button>
 
-                            {/* Departments */}
                             <div className="text-xs font-bold text-slate-500 mt-5 mb-2 px-2 uppercase tracking-widest">Departments</div>
                             <button onClick={() => setActiveTab('jute')} className={`nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${activeTab === 'jute' ? 'bg-green-700 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                                 <Icon name="layers" className="w-4 h-4" /> Jute Dept. Overview
                             </button>
 
-                            {/* External Apps */}
                             <div className="text-xs font-bold text-slate-500 mt-5 mb-2 px-2 uppercase tracking-widest">Applications</div>
 
-                            {/* EMMS */}
                             <a href="https://emms-bally-jute-mill.vercel.app/?_vercel_share=YqIewTfJI3l2nOCyIY9DTkYaGORetKYE" target="_blank" rel="noopener noreferrer"
                                 className="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                                 <Icon name="grid" className="w-4 h-4 text-blue-400" />
@@ -278,7 +319,6 @@
                                 <Icon name="external" className="w-3 h-3 ml-auto opacity-50" />
                             </a>
 
-                            {/* FireERP */}
                             <a href="https://script.google.com/macros/s/AKfycbyRQSIyjEIORFeIVm3emyRKEX3P_iwPvT-cY1YWswUnyDkT-yHxJgBQArKqYvtg0BbLmQ/exec" target="_blank" rel="noopener noreferrer"
                                 className="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                                 <Icon name="fire" className="w-4 h-4 text-orange-400" />
@@ -286,7 +326,6 @@
                                 <Icon name="external" className="w-3 h-3 ml-auto opacity-50" />
                             </a>
 
-                            {/* Maintenance ERP */}
                             <a href="https://script.google.com/macros/s/AKfycbyDVtOUO5K8qspPKBP0eu4QJrcDO-3zOt_yr-I_7YqQtGyf9qo93hUPlW5Ec0Aro3c8vA/exec" target="_blank" rel="noopener noreferrer"
                                 className="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                                 <Icon name="wrench" className="w-4 h-4 text-purple-400" />
@@ -294,7 +333,6 @@
                                 <Icon name="external" className="w-3 h-3 ml-auto opacity-50" />
                             </a>
 
-                            {/* Motor ERP */}
                             <a href="https://script.google.com/a/macros/ballyjute.com/s/AKfycbzJgHsLQi3LneltrVgrSzVkGeyxlWeiaX29NEu_jI5A32HRXuoJgcgkKGFsNWo-RdNXKA/exec" target="_blank" rel="noopener noreferrer"
                                 className="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white">
                                 <Icon name="motor" className="w-4 h-4 text-teal-400" />
@@ -302,7 +340,6 @@
                                 <Icon name="external" className="w-3 h-3 ml-auto opacity-50" />
                             </a>
 
-                            {/* Upcoming */}
                             <div className="text-xs font-bold text-slate-600 mt-5 mb-2 px-2 uppercase tracking-widest">Upcoming</div>
 
                             <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 cursor-not-allowed select-none">
@@ -316,7 +353,6 @@
                                 <span className="ml-auto text-xs bg-amber-900/40 text-amber-400 border border-amber-700/40 px-1.5 py-0.5 rounded-full upcoming-tag font-bold">SOON</span>
                             </div>
 
-                            {/* Admin */}
                             {userRole === 'Admin' && (
                                 <div className="mt-5 p-3 bg-slate-800 rounded-xl border border-red-900/30">
                                     <div className="flex items-center gap-2 text-red-400 text-xs font-bold mb-2">
@@ -336,7 +372,6 @@
 
                     {/* Main */}
                     <div className="flex-1 flex flex-col overflow-hidden">
-                        {/* Header */}
                         <header className="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-6 shadow-sm z-10">
                             <h1 className="text-lg font-bold text-slate-800 capitalize tracking-tight">{currentData.title}</h1>
                             <div className="flex items-center gap-4">
@@ -350,11 +385,9 @@
                             </div>
                         </header>
 
-                        {/* Body */}
                         <div className="flex-1 overflow-auto p-6">
                             <div className="space-y-6">
 
-                                {/* Stats */}
                                 <div className={`grid grid-cols-2 md:grid-cols-${activeTab === 'jute' ? '6' : '4'} gap-4`}>
                                     {currentData.stats.map((stat, idx) => (
                                         <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 animate-fade-in card-hover" style={{animationDelay:`${idx*40}ms`}}>
@@ -364,7 +397,6 @@
                                     ))}
                                 </div>
 
-                                {/* Chart + Panel */}
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col">
                                         <div className="flex justify-between items-center mb-4">
@@ -393,7 +425,6 @@
                                             </ResponsiveContainer>
                                         </div>
 
-                                        {/* Open App Button — always visible */}
                                         <div className="mt-5 pt-4 border-t border-slate-100">
                                             <a
                                                 href="https://script.google.com/a/macros/yajurfibres.com/s/AKfycbzBVCAE4bkNt0HB2UzCbvE23clIc69iWy39l8wP_4YQXAXbai9upavKJJWkww9s82pU/exec"
@@ -414,7 +445,6 @@
                                             </a>
                                         </div>
 
-                                        {/* Apps Section Below Graph */}
                                         <div className="mt-4 pt-4 border-t border-slate-100">
                                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Quick Access — Applications</p>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -506,6 +536,9 @@
             );
         };
 
+        if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || typeof Recharts === 'undefined') {
+            throw new Error('A required library (React, ReactDOM, or Recharts) did not load from the CDN.');
+        }
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
